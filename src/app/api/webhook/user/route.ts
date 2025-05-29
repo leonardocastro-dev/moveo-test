@@ -70,12 +70,11 @@ export async function POST(request: Request) {
     }
 
     const userData = await getUserData(phone)
+    console.log(request.body)
 
     return NextResponse.json({
       output: {
-        live_instructions: {
-          conteudo: userData
-        }
+        live_instructions: userData
       }
     })
   } catch (error: any) {
