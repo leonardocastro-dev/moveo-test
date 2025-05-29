@@ -44,40 +44,23 @@ async function getUserData(phone: string) {
   return userData
 }
 
-export async function GET(request: Request) {
-  try {
-    const { searchParams } = new URL(request.url)
-    const phone = searchParams.get('phone')
-
-    if (!phone) {
-      return NextResponse.json(
-        { error: 'Phone number is required' },
-        { status: 400 }
-      )
-    }
-
-    const userData = await getUserData(phone)
-
-    return NextResponse.json({
-      output: {
-        live_instructions: {
-          conteudo: userData
-        }
-      }
-    })
-  } catch (error: any) {
-    console.error('Error processing GET request:', error)
-    return NextResponse.json(
-      { error: error.message || 'Internal server error' },
-      { status: error.message ? 404 : 500 }
-    )
-  }
-}
-
 export async function POST(request: Request) {
   try {
-    const body = await request.json()
-    const { phone } = body
+    const { searchParams } = new URL(request.url)
+    let phone = searchParams.get('phone')
+
+    if (!phone) {
+      try {
+        const body = await request.json()
+        phone = body.phone
+      } catch (e) {
+        console.error('Failed to parse request body:', e)
+        return NextResponse.json(
+          { error: 'Invalid request: phone number must be provided either in query params or request body' },
+          { status: 400 }
+        )
+      }
+    }
 
     if (!phone) {
       return NextResponse.json(
