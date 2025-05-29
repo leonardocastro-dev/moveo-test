@@ -46,31 +46,21 @@ async function getUserData(phone: string) {
 
 export async function POST(request: Request) {
   try {
-    const { searchParams } = new URL(request.url)
-    let phone = searchParams.get('phone')
-
-    if (!phone) {
-      try {
-        const body = await request.json()
-        phone = body.phone
-      } catch (e) {
-        console.error('Failed to parse request body:', e)
-        return NextResponse.json(
-          { error: 'Invalid request: phone number must be provided either in query params or request body' },
-          { status: 400 }
-        )
-      }
-    }
-
-    if (!phone) {
+    let phone: string
+    try {
+      const body = await request.json()
+      const { phone: userPhone } = body.context.user
+      phone = String(userPhone)
+      console.log('Phone received (converted to string):', phone)
+    } catch (e) {
+      console.error('Failed to parse request body:', e)
       return NextResponse.json(
-        { error: 'Phone number is required' },
+        { error: 'Invalid request: phone number must be provided in body.context.user' },
         { status: 400 }
       )
     }
 
     const userData = await getUserData(phone)
-    console.log(request.body)
 
     return NextResponse.json({
       output: {
