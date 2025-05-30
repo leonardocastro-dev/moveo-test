@@ -55,7 +55,10 @@ export async function POST(request: Request) {
     } catch (e) {
       console.error('Failed to parse request body:', e)
       return NextResponse.json(
-        { error: 'Invalid request: phone number must be provided in body.context.user' },
+        {
+          error:
+            'Invalid request: phone number must be provided in body.context.user'
+        },
         { status: 400 }
       )
     }
