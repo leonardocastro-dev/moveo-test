@@ -4,7 +4,7 @@ import { getGoogleCalendarClient } from '@/config/calendar'
 async function getUserEvents(email: string) {
   const calendar = await getGoogleCalendarClient()
 
-  // Busca eventos para os próximos 7 dias
+  // Find events for the next 7 days
   const timeMin = new Date()
   const timeMax = new Date()
   timeMax.setDate(timeMax.getDate() + 7)
@@ -38,6 +38,22 @@ async function getUserEvents(email: string) {
   }
 }
 
+function formatDate(dateString: string) {
+  const date = new Date(dateString)
+  return date.toLocaleString('en-US', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  })
+}
+
+function generateActionId() {
+  return 'calendar-' + Date.now().toString()
+}
+
 export async function POST(request: Request) {
   try {
     let email: string
@@ -58,10 +74,34 @@ export async function POST(request: Request) {
 
     const events = await getUserEvents(email)
 
+    const cards = events.map((event) => ({
+      title: event.title,
+      subtitle: `${formatDate(event.start || '')}\n${formatDate(event.end || '')}`,
+      description: event.description || 'No description available',
+      buttons: [
+        {
+          type: 'postback',
+          label: 'Select Event',
+          value: event.title
+        }
+      ],
+      default_action: {
+        type: 'postback',
+        value: event.title
+      }
+    }))
+
     return NextResponse.json({
       output: {
         live_instructions: events
-      }
+      },
+      responses: [
+        {
+          type: 'carousel',
+          cards: cards,
+          action_id: generateActionId()
+        }
+      ]
     })
   } catch (error: any) {
     console.error('Error processing calendar request:', error)
